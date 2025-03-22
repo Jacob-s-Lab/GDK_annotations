@@ -4,18 +4,18 @@
 
 # ClinVar Data Collection and Curation
 
-## Download ClinVar VCF & variant_summary
+## Download ClinVar VCF, variant_summary and variation_allele
 
 Use Version 20240107
-
+variation_allele without archive
 ```bash
-mkdir ClinVar_v20240107
-cd ClinVar_v20240107
-
 wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/archive_2.0/2024/clinvar_20240107.vcf.gz
 wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/archive_2.0/2024/clinvar_20240107.vcf.gz.tbi
 
-wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/gene_specific_summary_2024-01.txt.gz
+wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/variant_summary_2024-01.txt.gz
+gzip -d variant_summary_2024-01.txt.gz
+wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variation_allele.txt.gz
+gzip -d variation_allele.txt.gz
 ```
 
 ## VCF Normalization
@@ -24,8 +24,6 @@ Use `bcftools` v1.18
 Check VCF Variant Count
 
 ```bash
-cd ClinVar_v20240107
-
 version=20240107
 bcftools stats clinvar_${version}_GRCh38.vcf.gz
 ```
@@ -97,5 +95,17 @@ bcftools query -f '%CHROM\t%POS\t%END\t%REF\t%ALT\t%AF_ESP\t%AF_EXAC\t%AF_TGP\t%
 
 sed -e 's/%3D/=/g' -i clinvar_GRCh38.norm.tsv
 ```
+
+## variant_summary Curation and Maging
+With R Language, See [ClinVar Sample Set Curation](ClinVarSamplesetCuration.md)
+
+## ClinVar CLNREVSTAT 2 star VCF for Annotators
+With R Language, See [Creat ClinVar VCF](CreateClinVarVCF.md)
+You can Use `ClinVar_GRCh38_PLP_Tx1_20240107.vcf` and `ClinVar_GRCh38_BLB_Tx1_20240107.vcf` for following Annotaotr Analyzing or Download [ClinVar_GRCh38_PLP_Tx1_20240107.vcf.gz](ClinVar_GRCh38_PLP_Tx1_20240107.vcf.gz) and [ClinVar_GRCh38_BLB_Tx1_20240107.vcf.gz](ClinVar_GRCh38_BLB_Tx1_20240107.vcf.gz) 
+
+---
+
+
+
 
 

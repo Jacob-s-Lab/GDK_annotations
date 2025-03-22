@@ -1,6 +1,56 @@
-# Load Normalized Tsv
+# Load variation_allele.txt
 
 Use R tidyverse Library
+```r
+library(tidyverse)
+```
+
+Just Keep `Variant Type` Allele
+```r
+tsv_variation_allele <- read_tsv(
+  "variation_allele.txt",
+  skip = 8,
+  col_names = c("VariationID", "Type", "AlleleID", "Interpreted")
+)
+
+tsv_variation_allele_filter <- tsv_variation_allele %>%
+  filter(Interpreted == "yes") %>%
+  filter(Type == "Variant")
+
+rm(tsv_variation_allele)
+```
+
+# Load variant_summary.txt
+```r
+tsv_variant_summary <- read_tsv("variant_summary_2024-01.txt")
+```
+4,804,422 Variant
+
+## Filter out non `Variant Type` Allele
+```r
+tsv_variant_summary_filter <- tsv_variant_summary  %>%
+  filter(`#AlleleID` %in% tsv_variation_allele_filter$AlleleID)
+
+rm(tsv_variation_allele_filter, tsv_variant_summary)
+```
+
+## Filter out GRCh38 and Curation
+```r
+vsum_clinvar_g38 <- tsv_variant_summary_filter %>%
+  filter(Assembly == "GRCh38") %>%
+  filter(!(ReferenceAlleleVCF %in% c("na", "Un"))) %>%
+  filter(!(AlternateAlleleVCF %in% c("na", "Un"))) %>%
+  filter(!(Chromosome %in% c("na", "Un"))) %>%
+  rename(AlleleID = `#AlleleID`)
+
+rm(tsv_variant_summary_filter)
+```
+
+---
+
+# Merge VCF and variant_summary
+
+## Load VCF Normalized Tsv
 ```r
 library(tidyverse)
 
@@ -38,29 +88,60 @@ vcf_clinvar_g38 <- read_tsv(
 )
 ```
 
-# ClinVar 2 star Variants Curation
+## VCF CLNSIG Curation
+```r
+vcf_clinvar_g38 <- vcf_clinvar_g38 %>%
+  mutate(
+    ClinVar_CLNSIG = case_when(
+      (str_detect(CLNSIG, "Conflicting") & str_detect(CLNSIGCONF, "athogenic")) ~ "Conflicting_PLP",
+      str_detect(CLNSIG, "Conflicting") ~ "Conflicting",
+      str_detect(CLNSIG, "Pathogenic") ~ "Pathogenic",
+      str_detect(CLNSIG, "Likely_pathogenic") ~ "Likely_pathogenic",
+      str_detect(CLNSIG, "Benign") ~ "Benign",
+      str_detect(CLNSIG, "Likely_benign") ~ "Likely_benign",
+      str_detect(CLNSIG, "drug_response") ~ "drug_response",
+      str_detect(CLNSIG, "risk_factor") ~ "risk_factor",
+      str_detect(CLNSIG, "not_provided") ~ "not_provided",
+      str_detect(CLNSIG, "Uncertain_significance") ~ "Uncertain_significance",
+      (!is.na(CLNSIG)) ~ "other"
+    )
+  )
+```
 
-Remove MT and variant without MC or Multi-MC
+## Extract variant_summary `VariationID`, `Type`, `Name` ... to VCF
+Join by `chr` and `AlleleID`
+```r
+df_clinvar_GRCh38 <- vcf_clinvar_g38 %>%
+  select(1:5, AlleleID, ClinVar_CLNSIG, CLNSIGCONF, CLNREVSTAT, MC) %>%
+  left_join(
+    vsum_clinvar_g38 %>%
+      rename(chr = Chromosome) %>%
+      select(chr, AlleleID, VariationID, Type, Name, GeneSymbol, RCVaccession, PhenotypeIDS, PhenotypeList, NumberSubmitters, OriginSimple),
+    by = c("chr", "AlleleID")
+  )
+
+save(df_clinvar_GRCh38, file = "df_clinvar_GRCh38_20240107.RData")
+rm(vcf_clinvar_g37, vcf_clinvar_g38, vsum_clinvar_g37, vsum_clinvar_g38)
+```
+
+---
+
+# ClinVar CLNREVSTAT 2 star Variants Curation
+
+## Remove MT and variant without MC or Multi-MC
 ```r
 df_clinvar_GRCh38_PLP_sep <- df_clinvar_GRCh38 %>%
   filter(ClinVar_CLNSIG %in% c("Pathogenic", "Likely_pathogenic")) %>%
   filter(CLNREVSTAT %in% c("criteria_provided,_multiple_submitters,_no_conflicts", "reviewed_by_expert_panel", "practice_guideline")) %>%
-  # 58,843
   filter(chr != "MT") %>%
-  # 58,742 (-101)
   select(chr:ClinVar_CLNSIG, CLNREVSTAT, MC, VariationID, Type, Name, GeneSymbol) %>%
   filter(!is.na(MC)) %>%
-  # 58,474 (-269)
   mutate(NM = str_extract(Name, 'N\\w_\\d+')) %>%
   filter(!is.na(NM)) %>%
-  # 58,473 (-1)
   filter(!is.na(VariationID)) %>%
-  # 58,473 (-0) %>%
   filter(!str_detect(MC, ",")) %>%
-  # 44,351 (-14122)
   mutate(key = str_c(VariationID, "|", AlleleID)) %>%
   mutate(HGVSc = str_extract(Name, 'c\\.[^\\s\\(]+')) %>%
-  # mutate(Symbol = str_extract(Name, '\\((.*)\\)[^$]', group = 1)) %>%
   mutate(HGVSp = str_extract(Name, '\\((p\\..*)\\)$', group = 1)) %>%
   mutate(Consequence = str_extract(MC, '[^\\|]+$')) %>%
   select(key, chr:ClinVar_CLNSIG, CLNREVSTAT, Consequence, VariationID, Type, Name, NM, GeneSymbol, HGVSc, HGVSp)
@@ -68,29 +149,22 @@ df_clinvar_GRCh38_PLP_sep <- df_clinvar_GRCh38 %>%
 df_clinvar_GRCh38_BLB_sep <- df_clinvar_GRCh38 %>%
   filter(ClinVar_CLNSIG %in% c("Benign", "Likely_benign")) %>%
   filter(CLNREVSTAT %in% c("criteria_provided,_multiple_submitters,_no_conflicts", "reviewed_by_expert_panel", "practice_guideline")) %>%
-  # 147,544
   filter(chr != "MT") %>%
-  # 147,479 (-65)
   select(chr:ClinVar_CLNSIG, CLNREVSTAT, MC, VariationID, Type, Name, GeneSymbol) %>%
   filter(!is.na(MC)) %>%
-  # 146,891 (-588)
   mutate(NM = str_extract(Name, 'N\\w_\\d+')) %>%
   filter(!is.na(NM)) %>%
-  # 146,875 (-16)
   filter(!is.na(VariationID)) %>%
-  # 146,875 (-0) %>%
   filter(!str_detect(MC, ",")) %>%
-  # 120,198 (-26677)
   mutate(key = str_c(VariationID, "|", AlleleID)) %>%
   mutate(HGVSc = str_extract(Name, 'c\\.[^\\s\\(]+')) %>%
-  # mutate(Symbol = str_extract(Name, '\\((.*)\\)[^$]', group = 1)) %>%
   mutate(HGVSp = str_extract(Name, '\\((p\\..*)\\)$', group = 1)) %>%
   mutate(Consequence = str_extract(MC, '[^\\|]+$')) %>%
   select(key, chr:ClinVar_CLNSIG, CLNREVSTAT, Consequence, VariationID, Type, Name, NM, GeneSymbol, HGVSc, HGVSp)
 
 ```
 
-# Consequence Normalization
+## Consequence Normalization
 
 ```r
 df_clinvar_GRCh38_PLP_Tx1 <- df_clinvar_GRCh38_PLP_sep %>%
@@ -129,4 +203,30 @@ rm(df_clinvar_GRCh38_PLP_sep)
 rm(df_clinvar_GRCh38_BLB_sep)
 
 ```
+
+## ClinVar HGVSc Curation
+
+```r
+df_clinvar_GRCh38_BLB_Tx1 <- df_clinvar_GRCh38_BLB_Tx1 %>%
+  mutate(HGVSc = if_else(str_detect(HGVSc, 'del[ATCG]+'), str_replace(HGVSc, '(.*del)[ATCG]+', '\\1'), HGVSc)) %>%
+  mutate(HGVSc = if_else(str_detect(HGVSc, 'delins[ATCG]+'), str_replace(HGVSc, '(.*delins)[ATCG]+', '\\1'), HGVSc)) %>%
+  mutate(HGVSc = if_else(str_detect(HGVSc, 'dup[ATCG]+'), str_replace(HGVSc, '(.*dup)[ATCG]+', '\\1'), HGVSc)) %>%
+  mutate(HGVSc = if_else(str_detect(HGVSc, 'ins[ATCG]+'), str_replace(HGVSc, '(.*ins)[ATCG]+', '\\1'), HGVSc)) %>%
+  mutate(HGVSc = if_else(str_detect(HGVSc, 'inv[ATCG]+'), str_replace(HGVSc, '(.*inv)[ATCG]+', '\\1'), HGVSc))
+
+df_clinvar_GRCh38_PLP_Tx1 <- df_clinvar_GRCh38_PLP_Tx1 %>%
+  mutate(HGVSc = if_else(str_detect(HGVSc, 'del[ATCG]+'), str_replace(HGVSc, '(.*del)[ATCG]+', '\\1'), HGVSc)) %>%
+  mutate(HGVSc = if_else(str_detect(HGVSc, 'delins[ATCG]+'), str_replace(HGVSc, '(.*delins)[ATCG]+', '\\1'), HGVSc)) %>%
+  mutate(HGVSc = if_else(str_detect(HGVSc, 'dup[ATCG]+'), str_replace(HGVSc, '(.*dup)[ATCG]+', '\\1'), HGVSc)) %>%
+  mutate(HGVSc = if_else(str_detect(HGVSc, 'ins[ATCG]+'), str_replace(HGVSc, '(.*ins)[ATCG]+', '\\1'), HGVSc)) %>%
+  mutate(HGVSc = if_else(str_detect(HGVSc, 'inv[ATCG]+'), str_replace(HGVSc, '(.*inv)[ATCG]+', '\\1'), HGVSc))
+```
+
+```r
+save(df_clinvar_GRCh38_BLB_Tx1, file = "df_clinvar_GRCh38_BLB_Tx1.RData")
+save(df_clinvar_GRCh38_PLP_Tx1, file = "df_clinvar_GRCh38_PLP_Tx1.RData")
+```
+
+
+
 
