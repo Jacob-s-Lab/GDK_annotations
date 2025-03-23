@@ -3,15 +3,21 @@
 ---
 
 # ClinVar Data Collection and Curation
-Can Download our Curated and Normalized VCF and Decompress for following Annotation
+Can Download our Normalized VCF and Decompress for following Annotation
 [ClinVar_PLP](ClinVar_GRCh38_BLB_Tx1_20240107.vcf.gz)
 [ClinVar_BLB](ClinVar_GRCh38_BLB_Tx1_20240107.vcf.gz)
 
-OR See [ClinVar VCF Curation](ClinVarVcfNorm.md) to Download Raw ClinVar VCF and Curation by yourself
+OR See [ClinVar VCF Normalize](ClinVarVcfNorm.md) to Download Raw ClinVar VCF and Curation by yourself
+
+Curated ClinVar Tsv File Download
+[ClinVar_PLP](clinvar_GRCh38_PLP_Tx1.tsv.gz)
+[ClinVar_BLB](clinvar_GRCh38_BLB_Tx1.tsv.gz)
+
+OR See [ClinVar DataSet Curation](ClinVarSamplesetCuration.md)
 
 ---
 
-# Annotaors Installing
+# Annotators Installing
 See [Annotator Installing](AnnotatorInstall.md)
 
 ---
@@ -165,4 +171,6 @@ FORK=2
   --buffer_size ${BUFFER_SIZE} \
   --fork ${FORK}
 ```
+
+---
 
