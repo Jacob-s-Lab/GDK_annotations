@@ -3,109 +3,166 @@
 ---
 
 # ClinVar Data Collection and Curation
+Can Download our Curated and Normalized VCF and Decompress for following Annotation
+[ClinVar_PLP](ClinVar_GRCh38_BLB_Tx1_20240107.vcf.gz)
+[ClinVar_BLB](ClinVar_GRCh38_BLB_Tx1_20240107.vcf.gz)
 
-## Download ClinVar VCF, variant_summary and variation_allele
-
-Use Version 20240107
-variation_allele without archive
-```bash
-wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/archive_2.0/2024/clinvar_20240107.vcf.gz
-wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/archive_2.0/2024/clinvar_20240107.vcf.gz.tbi
-
-wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/variant_summary_2024-01.txt.gz
-gzip -d variant_summary_2024-01.txt.gz
-wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variation_allele.txt.gz
-gzip -d variation_allele.txt.gz
-```
-
-## VCF Normalization
-Use `bcftools` v1.18
-
-Check VCF Variant Count
-
-```bash
-version=20240107
-bcftools stats clinvar_${version}_GRCh38.vcf.gz
-```
-
-```
-number of records:      2349000
-number of no-ALTs:      990
-number of SNPs: 2147692
-number of MNPs: 7847
-number of indels:       186883
-number of others:       5588
-```
-
-Remove non 1~22, X, Y, MT chrmosome
-Using Ensembl GRCh38 release-111 Reference Genome
-
-```bash
-bcftools view -r 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,X,Y,MT  -O z -o clinvar_GRCh38.exChr.vcf.gz clinvar_${version}_GRCh38.vcf.gz
-
-bcftools norm \
-  -m -any \
-  -O z \
-  -cs \
-  -f Homo_sapiens.GRCh38.dna.toplevel.fa.gz \
-  -o clinvar_GRCh38.norm1.vcf.gz \
-  clinvar_GRCh38.exChr.vcf.gz
-
-```
-
-Remove duplicated Variant
-```bash
-bcftools norm \
-  --no-version \
-  -d none \
-  -O z \
-  -o clinvar_GRCh38.norm2.vcf.gz \
-  clinvar_GRCh38.norm1.vcf.gz
-```
-
-Remove no-ALTs, others and > 50bp Variants
-```bash
-bcftools view \
-  --no-version \
-  --type snps,indels,mnps \
-  -e 'ILEN>51 | ILEN<-51 | ALT~"R" | ALT~"Y" | ALT~"M" | ALT~"K" | ALT~"S" | ALT~"W" | ALT~"H" | ALT~"B" | ALT~"V" | ALT~"D" | ALT~"N" | ALT~"*"' \
-  -O z -o clinvar_GRCh38.norm3.vcf.gz \
-  clinvar_GRCh38.norm2.vcf.gz
-```
-
-Count and Index Normalized VCF
-```bash
-bcftools index clinvar_GRCh38.norm3.vcf.gz
-bcftools stats clinvar_GRCh38.norm3.vcf.gz
-```
-```
-number of records:      2338611
-number of no-ALTs:      0
-number of SNPs: 2147643
-number of MNPs: 7846
-number of indels:       183122
-number of others:       0
-```
-
-## Transform vcf to tsv file for R or Python
-Use `bcftools` Query
-fix HTML encode with `sed`
-```bash
-bcftools query -f '%CHROM\t%POS\t%END\t%REF\t%ALT\t%AF_ESP\t%AF_EXAC\t%AF_TGP\t%ALLELEID\t%CLNDN\t%CLNDNINCL\t%CLNDISDB\t%CLNDISDBINCL\t%CLNHGVS\t%CLNREVSTAT\t%CLNSIG\t%CLNSIGCONF\t%CLNSIGINCL\t%CLNVC\t%CLNVCSO\t%CLNVI\t%DBVARID\t%GENEINFO\t%MC\t%ORIGIN\t%RS\n' clinvar_GRCh38.norm3.vcf.gz > clinvar_GRCh38.norm.tsv
-
-sed -e 's/%3D/=/g' -i clinvar_GRCh38.norm.tsv
-```
-
-## variant_summary Curation and Maging
-With R Language, See [ClinVar Sample Set Curation](ClinVarSamplesetCuration.md)
-
-## ClinVar CLNREVSTAT 2 star VCF for Annotators
-With R Language, See [Creat ClinVar VCF](CreateClinVarVCF.md)
-You can Use `ClinVar_GRCh38_PLP_Tx1_20240107.vcf` and `ClinVar_GRCh38_BLB_Tx1_20240107.vcf` for following Annotaotr Analyzing or Download [ClinVar_GRCh38_PLP_Tx1_20240107.vcf.gz](ClinVar_GRCh38_PLP_Tx1_20240107.vcf.gz) and [ClinVar_GRCh38_BLB_Tx1_20240107.vcf.gz](ClinVar_GRCh38_BLB_Tx1_20240107.vcf.gz) 
+OR See [ClinVar VCF Curation](ClinVarVcfNorm.md) to Download Raw ClinVar VCF and Curation by yourself
 
 ---
 
+# Annotaors Installing
+See [Annotator Installing](AnnotatorInstall.md)
 
+---
 
+# Variant Annotation
 
+## ANNOVAR
+
+Make ANNOVAR `avinput`
+```bash
+cd /opt/annovar
+
+INPUT_DIR=/your/clinvar/vcf/path/ClinVar_VCF
+OUTPUT_DIR=/your/output/volume/ClinVar20240107/refseq_annovar
+
+perl convert2annovar.pl --includeinfo -format vcf4 $INPUT_DIR/ClinVar_GRCh38_PLP_Tx1_20240107.vcf > $OUTPUT_DIR/GRCh38_PLP/ClinVar_GRCh38_PLP.avinput
+
+perl convert2annovar.pl --includeinfo -format vcf4 $INPUT_DIR/ClinVar_GRCh38_BLB_Tx1_20240107.vcf > $OUTPUT_DIR/GRCh38_BLB/ClinVar_GRCh38_BLB.avinput
+```
+Run ANNOVAR with RefSeq DB
+thread number can change
+```bash
+IN_avinput=/your/output/volume/ClinVar20240107/refseq_annovar/GRCh38_PLP/ClinVar_GRCh38_PLP.avinput
+OUT_DIR=/your/output/volume/ClinVar20240107/refseq_annovar/GRCh38_PLP
+
+perl /volume/wgsa/annovar/table_annovar.pl $IN_avinput \
+/volume/wgsa/annovar/humandb/ --buildver hg38 --protocol refGene --operation g -polish \
+-out $OUT_DIR/ClinVar_GRCh38_PLP \
+--thread 1 \
+--argument '--neargene 5000 --hgvs --transcript_function --separate' \
+--dot2underline --nastring .
+```
+```bash
+IN_avinput=/your/output/volume/ClinVar20240107/refseq_annovar/GRCh38_BLB/ClinVar_GRCh38_BLB.avinput
+OUT_DIR=/your/output/volume/ClinVar20240107/refseq_annovar/GRCh38_BLB
+
+perl /volume/wgsa/annovar/table_annovar.pl $IN_avinput \
+/volume/wgsa/annovar/humandb/ --buildver hg38 --protocol refGene --operation g -polish \
+-out $OUT_DIR/ClinVar_GRCh38_BLB \
+--thread 1 \
+--argument '--neargene 5000 --hgvs --transcript_function --separate' \
+--dot2underline --nastring .
+```
+
+## SnpEff
+Run SnpEff with RefSeq DB
+Xmx Ram can change
+```bash
+cd /opt/snpEff
+
+INPUT_DIR=/your/clinvar/vcf/path/ClinVar_VCF
+OUTPUT_DIR=/your/output/volume/ClinVar20240107/refseq_snpeff
+
+SnpEff_INPUT_VCF=$INPUT_DIR/ClinVar_GRCh38_PLP_Tx1_20240107.vcf
+SnpEff_OUTPUT_VCF=$OUTPUT_DIR/GRCh38_PLP/ClinVar_GRCh38_PLP_Tx1_20240107.snpeff.vcf
+
+java -Xmx10g -jar snpEff.jar GRCh38.mane.1.2.refseq $SnpEff_INPUT_VCF > $SnpEff_OUTPUT_VCF
+```
+```bash
+cd /opt/snpEff
+
+INPUT_DIR=/your/clinvar/vcf/path/ClinVar_VCF
+OUTPUT_DIR=/your/output/volume/ClinVar20240107/refseq_snpeff
+
+SnpEff_INPUT_VCF=$INPUT_DIR/ClinVar_GRCh38_BLB_Tx1_20240107.vcf
+SnpEff_OUTPUT_VCF=$OUTPUT_DIR/GRCh38_BLB/ClinVar_GRCh38_BLB_Tx1_20240107.snpeff.vcf
+
+java -Xmx10g -jar snpEff.jar GRCh38.mane.1.2.refseq $SnpEff_INPUT_VCF > $SnpEff_OUTPUT_VCF
+```
+
+## VEP
+Run VEP with RefSeq DB
+BUFFER_SIZE, FORK can change
+```bash
+cd /opt/ensembl-vep
+
+INPUT_DIR=/your/clinvar/vcf/path/ClinVar_VCF
+OUTPUT_DIR=//your/output/volume/ClinVar20240107/refseq_vep
+
+VEP_INPUT_VCF=$INPUT_DIR/ClinVar_GRCh38_PLP_Tx1_20240107.vcf
+VEP_OUTPUT_VCF=$OUTPUT_DIR/GRCh38_PLP/ClinVar_GRCh38_PLP_Tx1_20240107.vep.vcf
+
+ASSEMBLY=GRCh38
+BUFFER_SIZE=500
+CACHE_VERSION=111
+FORK=2
+
+./vep \
+  --format vcf \
+  -i $VEP_INPUT_VCF \
+  --vcf \
+  -o $VEP_OUTPUT_VCF \
+  --assembly ${ASSEMBLY} \
+  --refseq \
+  --offline \
+  --cache \
+  --cache_version ${CACHE_VERSION} \
+  --dir_cache /opt/VepCache \
+  --fasta /opt/VepCache/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz \
+  --hgvsg \
+  --hgvs \
+  --total_length \
+  --variant_class \
+  --symbol \
+  --protein \
+  --canonical \
+  --mane \
+  --biotype \
+  --no_stats \
+  --no_escape \
+  --buffer_size ${BUFFER_SIZE} \
+  --fork ${FORK}
+```
+```bash
+cd /opt/ensembl-vep
+
+INPUT_DIR=/your/clinvar/vcf/path/ClinVar_VCF
+OUTPUT_DIR=//your/output/volume/ClinVar20240107/refseq_vep
+
+VEP_INPUT_VCF=$INPUT_DIR/ClinVar_GRCh38_BLB_Tx1_20240107.vcf
+VEP_OUTPUT_VCF=$OUTPUT_DIR/GRCh38_PLP/ClinVar_GRCh38_BLB_Tx1_20240107.vep.vcf
+
+ASSEMBLY=GRCh38
+BUFFER_SIZE=500
+CACHE_VERSION=111
+FORK=2
+
+./vep \
+  --format vcf \
+  -i $VEP_INPUT_VCF \
+  --vcf \
+  -o $VEP_OUTPUT_VCF \
+  --assembly ${ASSEMBLY} \
+  --refseq \
+  --offline \
+  --cache \
+  --cache_version ${CACHE_VERSION} \
+  --dir_cache /opt/VepCache \
+  --fasta /opt/VepCache/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz \
+  --hgvsg \
+  --hgvs \
+  --total_length \
+  --variant_class \
+  --symbol \
+  --protein \
+  --canonical \
+  --mane \
+  --biotype \
+  --no_stats \
+  --no_escape \
+  --buffer_size ${BUFFER_SIZE} \
+  --fork ${FORK}
+```
 
