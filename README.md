@@ -3,22 +3,22 @@
 ---
 
 # ClinVar Data Collection and Curation
-Can Download our Normalized VCF and Decompress for following Annotation
-[ClinVar_PLP](ClinVar_GRCh38_BLB_Tx1_20240107.vcf.gz)
-[ClinVar_BLB](ClinVar_GRCh38_BLB_Tx1_20240107.vcf.gz)
+You can download our normalized VCF file and decompress it for annotation:
+- [ClinVar_PLP](ClinVar_GRCh38_BLB_Tx1_20240107.vcf.gz)
+- [ClinVar_BLB](ClinVar_GRCh38_BLB_Tx1_20240107.vcf.gz)
 
-OR See [ClinVar VCF Normalize](ClinVarVcfNorm.md) to Download Raw ClinVar VCF and Curation by yourself
+Or, See [ClinVar VCF Normalize](ClinVarVcfNorm.md) for instructions on how to download the raw ClinVar VCF and perform curation yourself.
 
-Curated ClinVar Tsv File Download
-[ClinVar_PLP](clinvar_GRCh38_PLP_Tx1.tsv.gz)
-[ClinVar_BLB](clinvar_GRCh38_BLB_Tx1.tsv.gz)
+Curated ClinVar TSV files are also available for download:
+- [ClinVar_PLP](clinvar_GRCh38_PLP_Tx1.tsv.gz)
+- [ClinVar_BLB](clinvar_GRCh38_BLB_Tx1.tsv.gz)
 
-OR See [ClinVar DataSet Curation](ClinVarSamplesetCuration.md)
+Alternatively, see [ClinVar DataSet Curation](ClinVarSamplesetCuration.md) for more details.
 
 ---
 
 # Annotators Installing
-See [Annotator Installing](AnnotatorInstall.md)
+See [Annotator Installing](AnnotatorInstall.md) for installation instructions.
 
 ---
 
@@ -26,7 +26,7 @@ See [Annotator Installing](AnnotatorInstall.md)
 
 ## ANNOVAR
 
-Make ANNOVAR `avinput`
+Prepare ANNOVAR `avinput` files:
 ```bash
 cd /opt/annovar
 
@@ -37,8 +37,7 @@ perl convert2annovar.pl --includeinfo -format vcf4 $INPUT_DIR/ClinVar_GRCh38_PLP
 
 perl convert2annovar.pl --includeinfo -format vcf4 $INPUT_DIR/ClinVar_GRCh38_BLB_Tx1_20240107.vcf > $OUTPUT_DIR/GRCh38_BLB/ClinVar_GRCh38_BLB.avinput
 ```
-Run ANNOVAR with RefSeq DB
-thread number can change
+Run ANNOVAR with the RefSeq database (you can adjust the number of threads as needed):
 ```bash
 IN_avinput=/your/output/volume/ClinVar20240107/refseq_annovar/GRCh38_PLP/ClinVar_GRCh38_PLP.avinput
 OUT_DIR=/your/output/volume/ClinVar20240107/refseq_annovar/GRCh38_PLP
@@ -63,8 +62,7 @@ perl /volume/wgsa/annovar/table_annovar.pl $IN_avinput \
 ```
 
 ## SnpEff
-Run SnpEff with RefSeq DB
-Xmx Ram can change
+Run SnpEff with the RefSeq database (you can adjust the Xmx RAM value as needed):
 ```bash
 cd /opt/snpEff
 
@@ -89,8 +87,7 @@ java -Xmx10g -jar snpEff.jar GRCh38.mane.1.2.refseq $SnpEff_INPUT_VCF > $SnpEff_
 ```
 
 ## VEP
-Run VEP with RefSeq DB
-BUFFER_SIZE, FORK can change
+Run VEP with the RefSeq database (BUFFER_SIZE and FORK can be adjusted as needed):
 ```bash
 cd /opt/ensembl-vep
 
