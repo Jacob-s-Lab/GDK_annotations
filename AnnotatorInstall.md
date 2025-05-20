@@ -1,5 +1,5 @@
 # ANNOVAR
-Use ubuntu:20.4
+Use Ubuntu 20.4.
 ```bash
 apt-get update --fix-missing
 
@@ -8,7 +8,7 @@ DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -y gcc g+
 apt-get clean
 ```
 
-Download annovar.latest.tar.gz by Academic certification
+Download annovar.latest.tar.gz (Academic certification is required).
 ```bash
 cd /opt
 tar -zxvf annovar.latest.tar.gz
@@ -23,8 +23,8 @@ cd annovar
 ---
 
 # SnpEff
-Use ubuntu:20.4
-Requires Java 12 up
+Use Ubuntu 20.4.
+Requires Java 12 or higher.
 ```bash
 apt-get update --fix-missing
 
@@ -33,7 +33,7 @@ openjdk-21-jdk gcc g++ make wget unzip git git-lfs
 
 apt-get clean
 ```
-Download SnpEff
+Download SnpEff.
 Version 5.2 (2023-09-29)
 ```bash
 cd cd /opt
@@ -57,7 +57,7 @@ java -jar snpEff.jar download -v GRCh38.mane.1.2.ensembl
 ---
 
 # VEP
-Use ubuntu:20.4
+Use Ubuntu 20.4.
 ```bash
 apt update --fix-missing
 DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends install -y bzip2 parallel curl git make g++ wget
@@ -80,7 +80,7 @@ cd ..
 rm -rf /tmp/*
 ```
 
-Download VEP 111.0
+Download VEP version 111.0.
 ```bash
 cd /opt
 VEP_VERSION=111.0
