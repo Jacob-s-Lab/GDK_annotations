@@ -1,11 +1,9 @@
 # Load variation_allele.txt
-
-Use R tidyverse Library
+Use the R tidyverse library
 ```r
 library(tidyverse)
 ```
-
-Just Keep `Variant Type` Allele
+Keep only alleles of `Variant` Type
 ```r
 tsv_variation_allele <- read_tsv(
   "variation_allele.txt",
@@ -24,9 +22,9 @@ rm(tsv_variation_allele)
 ```r
 tsv_variant_summary <- read_tsv("variant_summary_2024-01.txt")
 ```
-4,804,422 Variant
+4,804,422 variants
 
-## Filter out non `Variant Type` Allele
+## Filter out alleles that are not of `Variant` Type
 ```r
 tsv_variant_summary_filter <- tsv_variant_summary  %>%
   filter(`#AlleleID` %in% tsv_variation_allele_filter$AlleleID)
@@ -34,7 +32,7 @@ tsv_variant_summary_filter <- tsv_variant_summary  %>%
 rm(tsv_variation_allele_filter, tsv_variant_summary)
 ```
 
-## Filter out GRCh38 and Curation
+## Filter for GRCh38 assembly and curate the data
 ```r
 vsum_clinvar_g38 <- tsv_variant_summary_filter %>%
   filter(Assembly == "GRCh38") %>%
@@ -50,7 +48,7 @@ rm(tsv_variant_summary_filter)
 
 # Merge VCF and variant_summary
 
-## Load VCF Normalized Tsv
+## Load normalized VCF as TSV
 ```r
 library(tidyverse)
 
@@ -88,7 +86,7 @@ vcf_clinvar_g38 <- read_tsv(
 )
 ```
 
-## VCF CLNSIG Curation
+## Curate the CLNSIG field in VCF
 ```r
 vcf_clinvar_g38 <- vcf_clinvar_g38 %>%
   mutate(
@@ -108,7 +106,7 @@ vcf_clinvar_g38 <- vcf_clinvar_g38 %>%
   )
 ```
 
-## Extract variant_summary `VariationID`, `Type`, `Name` ... to VCF
+## Extract fields VariationID, Type, Name, etc. from variant_summary and merge into the VCF.
 Join by `chr` and `AlleleID`
 ```r
 df_clinvar_GRCh38 <- vcf_clinvar_g38 %>%
@@ -128,7 +126,7 @@ rm(vcf_clinvar_g37, vcf_clinvar_g38, vsum_clinvar_g37, vsum_clinvar_g38)
 
 # ClinVar CLNREVSTAT 2 star Variants Curation
 
-## Remove MT and variant without MC or Multi-MC
+## Remove MT chromosome and variants without MC or with multiple MCs
 ```r
 df_clinvar_GRCh38_PLP_sep <- df_clinvar_GRCh38 %>%
   filter(ClinVar_CLNSIG %in% c("Pathogenic", "Likely_pathogenic")) %>%
@@ -164,7 +162,7 @@ df_clinvar_GRCh38_BLB_sep <- df_clinvar_GRCh38 %>%
 
 ```
 
-## Consequence Normalization
+## Normalize the Consequence field
 
 ```r
 df_clinvar_GRCh38_PLP_Tx1 <- df_clinvar_GRCh38_PLP_sep %>%
@@ -204,7 +202,7 @@ rm(df_clinvar_GRCh38_BLB_sep)
 
 ```
 
-## ClinVar HGVSc Curation
+## Curate the HGVSc field in ClinVar
 
 ```r
 df_clinvar_GRCh38_BLB_Tx1 <- df_clinvar_GRCh38_BLB_Tx1 %>%
