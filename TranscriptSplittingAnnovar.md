@@ -128,7 +128,7 @@ rm(tsv_all_variant_exonic, Joint_all_variant_exonic, tsv_exon_variant_sepTXsepHG
 ## Merging all annotations
 
 ```r
-MergeDF_annovar_refseq <- bind_rows(
+df_ClinVar_GRCh38_annovar_refseq <- bind_rows(
   Joint_all_variant_exonic_unknown,
   tsv_all_variant_intergenic,
   tsv_all_variant_innc,
@@ -139,11 +139,11 @@ MergeDF_annovar_refseq <- bind_rows(
   mutate(key = str_remove(key, "TAG=")) %>%
   arrange(match(chr, c(1:22, "X", "Y", "MT")), start, ref, alt, NM)
 
-MergeDF_annovar_refseq[MergeDF_annovar_refseq == ""] <- "."
-MergeDF_annovar_refseq[is.na(MergeDF_annovar_refseq)] <- "."
+df_ClinVar_GRCh38_annovar_refseq[df_ClinVar_GRCh38_annovar_refseq == ""] <- "."
+df_ClinVar_GRCh38_annovar_refseq[is.na(df_ClinVar_GRCh38_annovar_refseq)] <- "."
 ```
 
-> Note: The processed `MergeDF_annovar_refseq` can be used to compare against the `Curated ClinVar TSV` files using the join `key` we defined. The same approach applies to other annotator post-processing outputs.
+> Note: The processed `df_ClinVar_GRCh38_annovar_refseq` can be used to compare against the `Curated ClinVar TSV` files using the join `key` we defined. The same approach applies to other annotator post-processing outputs.
 
 
 

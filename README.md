@@ -171,3 +171,8 @@ FORK=2
 
 ---
 
+# Trrascript Curation After Annotation
+We provide an R script to process and split transcripts following annotation by annotators. You can then use the supplied `key` together with the processed `RefSeq transcript (NM)` identifiers as join criteria for comparative analyses in the programming language of your choice.
+- [ANNOVAR Transcript Curation](TranscriptSplittingAnnovar.md)
+- [SnpEff Transcript Curation](TranscriptSplittingSnpeff.md)
+- [VEP Transcript Curation](TranscriptSplittingVep.md)

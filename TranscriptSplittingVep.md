@@ -79,7 +79,7 @@ rm(tsv_query)
 ## Retain Valid RefSeq Transcripts
 
 ```r
-df_ClinVar_GRCh38_vep_refseq <- df_ClinVar_GRCh38_PLP_vep_refseq %>%
+df_ClinVar_GRCh38_vep_refseq <- tsv_nm %>%
   filter(str_detect(NM, '^N\\w_[0-9]+'))
 
 rm(tsv_nm)
