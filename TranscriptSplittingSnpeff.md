@@ -1,6 +1,6 @@
 # VCF to TSV
 
-After running the SnpEff annotation, we will obtain a VCF file corresponding to your input. To facilitate downstream processing, we convert it to a TSV format using `bcftools`. During this conversion, the TAG used as the `key` is extracted along with the `ANN` field; you may optionally exclude the `LOF` and `NMD` columns as needed.
+After running the SnpEff annotation, we will obtain a VCF file corresponding to our input. To facilitate downstream processing, we convert it to a TSV format using `bcftools`. During this conversion, the TAG used as the `key` is extracted along with the `ANN` field; you may optionally exclude the `LOF` and `NMD` columns as needed.
 
 Use `bcftools` v1.18:
 ```bash
