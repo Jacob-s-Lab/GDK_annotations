@@ -143,7 +143,7 @@ MergeDF_annovar_refseq[MergeDF_annovar_refseq == ""] <- "."
 MergeDF_annovar_refseq[is.na(MergeDF_annovar_refseq)] <- "."
 ```
 
-> Note: The processed MergeDF_annovar_refseq can be used to compare against the `Curated ClinVar TSV` files using the join key we defined. The same approach applies to other annotator post-processing outputs.
+> Note: The processed `MergeDF_annovar_refseq` can be used to compare against the `Curated ClinVar TSV` files using the join `key` we defined. The same approach applies to other annotator post-processing outputs.
 
 
 
